@@ -111,14 +111,14 @@
 
     .tag-chip.selected {
       border-color: #111;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
     }
 
     .tag-chip button {
       min-height: auto;
       padding: 4px 8px;
       font-size: 12px;
-      background: rgba(255,255,255,0.22);
+      background: rgba(255, 255, 255, 0.22);
       color: #fff;
       border-radius: 999px;
     }
@@ -129,6 +129,14 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 12px;
+    }
+
+    #prevMonthBtn {
+      justify-self: start;
+    }
+
+    #nextMonthBtn {
+      justify-self: end;
     }
 
     .calendar-title-wrap {
@@ -176,31 +184,116 @@
       cursor: pointer;
     }
 
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-weight: bold;
+      padding: 8px 0;
+      color: #667;
+      font-size: 14px;
+    }
+
+    .day-cell {
+      background: #fff;
+      border: 1px solid #dbe2ef;
+      border-radius: 12px;
+      min-height: 120px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .day-cell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .day-cell.outside {
+      background: #f0f3f8;
+      color: #9aa3b2;
+      cursor: default;
+    }
+
+    .day-number {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .shift-badge {
+      border-radius: 999px;
+      color: #fff;
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      border: 1px solid #cfd6e4;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 15px;
+      resize: vertical;
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .help-text {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
     @media (max-width: 720px) {
+      .tag-create-grid {
+        grid-template-columns: 1fr;
+      }
+
       .calendar-header {
         grid-template-columns: 1fr;
         justify-items: stretch;
       }
-    
+
       .calendar-title-wrap {
         order: -1;
       }
-    
-      .jump-controls {
-        justify-content: center;
-      }
-    
+
       .calendar-title {
         font-size: 18px;
       }
-    }
 
-    #prevMonthBtn {
-      justify-self: start;
-    }
-    
-    #nextMonthBtn {
-      justify-self: end;
+      .jump-controls {
+        justify-content: center;
+      }
+
+      .day-cell {
+        min-height: 100px;
+      }
+
+      .shift-badge {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -244,10 +337,10 @@
             <select id="jumpMonth"></select>
             <button class="jump-btn" id="jumpBtn">移動</button>
           </div>
-        
+
           <div class="calendar-title" id="calendarTitle"></div>
         </div>
-      
+
         <button class="sub-btn" id="nextMonthBtn">次の月</button>
       </div>
 
@@ -264,7 +357,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "shift_calendar_app_v4";
+    const STORAGE_KEY = "shift_calendar_app_v5";
 
     const BASE_COLOR = "#e74c3c";
     const BASE_HSL = hexToHsl(BASE_COLOR);
@@ -582,7 +675,6 @@
 
     function renderOutput() {
       const lines = [];
-
       const dateKeys = Object.keys(state.shiftsByDate).sort((a, b) => a.localeCompare(b));
 
       dateKeys.forEach(dateKey => {
@@ -607,6 +699,35 @@
       return a.end.localeCompare(b.end);
     }
 
+    function refreshJumpControls() {
+      jumpYearEl.innerHTML = "";
+      jumpMonthEl.innerHTML = "";
+
+      const currentYear = new Date().getFullYear();
+      const startYear = currentYear;
+      const endYear = currentYear + 10;
+
+      for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent = `${year}年`;
+        if (year === state.currentYear) {
+          option.selected = true;
+        }
+        jumpYearEl.appendChild(option);
+      }
+
+      for (let month = 1; month <= 12; month++) {
+        const option = document.createElement("option");
+        option.value = String(month);
+        option.textContent = `${month}月`;
+        if (month === state.currentMonth + 1) {
+          option.selected = true;
+        }
+        jumpMonthEl.appendChild(option);
+      }
+    }
+
     function formatDateKey(year, month, day) {
       return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     }
@@ -614,43 +735,6 @@
     function removeLeadingZero(timeStr) {
       const [hour, minute] = timeStr.split(":");
       return `${Number(hour)}:${minute}`;
-    }
-
-    function refreshJumpControls() {
-      jumpYearEl.innerHTML = "";
-      jumpMonthEl.innerHTML = "";
-        
-      const currentYear = new Date().getFullYear();
-      const startYear = currentYear;
-      const endYear = currentYear + 10;
-        
-      for (let year = startYear; year <= endYear; year++) {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = `${year}年`;
-        jumpYearEl.appendChild(option);
-      }
-    
-      for (let month = 1; month <= 12; month++) {
-        const option = document.createElement("option");
-        option.value = month;
-        option.textContent = `${month}月`;
-        jumpMonthEl.appendChild(option);
-      }
-    
-      syncJumpControls();
-    
-      jumpBtn.addEventListener("click", () => {
-        const selectedYear = Number(jumpYearEl.value);
-        const selectedMonth = Number(jumpMonthEl.value);
-      
-        state.currentYear = selectedYear;
-        state.currentMonth = selectedMonth - 1;
-      
-        saveState();
-        renderCalendar();
-        syncJumpControls();
-      });
     }
 
     function hexToRgb(hex) {
