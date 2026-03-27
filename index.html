@@ -362,10 +362,15 @@
     const outputEl = document.getElementById("output");
     const copyBtn = document.getElementById("copyBtn");
 
+    const jumpYearEl = document.getElementById("jumpYear");
+    const jumpMonthEl = document.getElementById("jumpMonth");
+    const jumpBtn = document.getElementById("jumpBtn");
+
     addTagBtn.addEventListener("click", handleAddTag);
     clearSelectionBtn.addEventListener("click", () => {
       state.selectedTagId = null;
       saveState();
+      initializeJumpControls();
       renderAll();
     });
 
