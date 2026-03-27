@@ -236,6 +236,47 @@
         font-size: 11px;
       }
     }
+    
+    .calendar-title-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .jump-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .jump-controls select {
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid #cfd6e4;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    
+    @media (max-width: 720px) {
+      .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    
+      .calendar-title-wrap {
+        flex-direction: column;
+        gap: 10px;
+      }
+    
+      .jump-controls {
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -271,7 +312,17 @@
     <div class="card">
       <div class="calendar-header">
         <button class="sub-btn" id="prevMonthBtn">前の月</button>
-        <div class="calendar-title" id="calendarTitle"></div>
+
+        <div class="calendar-title-wrap">
+          <div class="calendar-title" id="calendarTitle"></div>
+
+          <div class="jump-controls">
+            <select id="jumpYear"></select>
+            <select id="jumpMonth"></select>
+            <button class="sub-btn" id="jumpBtn">移動</button>
+          </div>
+        </div>
+
         <button class="sub-btn" id="nextMonthBtn">次の月</button>
       </div>
 
