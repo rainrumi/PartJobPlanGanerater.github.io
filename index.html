@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>バイト出勤可能日作成</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 16px;
+    }
+
+    .time-buttons {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .time-btn {
+      border: 1px solid #ccc;
+      background: #fff;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .time-btn.active {
+      background: #222;
+      color: #fff;
+      border-color: #222;
+    }
+
+    .main-btn, .sub-btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .main-btn {
+      background: #2d6cdf;
+      color: white;
+    }
+
+    .sub-btn {
+      background: #444;
+      color: white;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .delete-btn {
+      border: none;
+      background: #e74c3c;
+      color: white;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      box-sizing: border-box;
+      font-size: 15px;
+      padding: 12px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>バイト出勤可能日一覧</h1>
+
+    <div class="card">
+      <label for="date">日付</label>
+      <input type="date" id="date" />
+
+      <label>時間帯</label>
+      <div class="time-buttons" id="timeButtons">
+        <button class="time-btn" data-start="08:00" data-end="13:00">8:00〜13:00</button>
+        <button class="time-btn" data-start="18:00" data-end="21:00">18:00〜21:00</button>
+      </div>
+
+      <button class="main-btn" id="addBtn">追加</button>
+    </div>
+
+    <div class="card">
+      <label>登録一覧</label>
+      <ul id="list"></ul>
+    </div>
+
+    <div class="card">
+      <label for="output">出力テキスト</label>
+      <textarea id="output" readonly></textarea>
+      <button class="sub-btn" id="copyBtn">コピー</button>
+    </div>
+  </div>
+
+  <script>
+    const dateInput = document.getElementById("date");
+    const timeButtons = document.querySelectorAll(".time-btn");
+    const addBtn = document.getElementById("addBtn");
+    const listEl = document.getElementById("list");
+    const outputEl = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+
+    let selectedTime = null;
+    let items = JSON.parse(localStorage.getItem("shiftItems") || "[]");
+
+    timeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        timeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedTime = {
+          start: btn.dataset.start,
+          end: btn.dataset.end
+        };
+      });
+    });
+
+    addBtn.addEventListener("click", () => {
+      const date = dateInput.value;
+      if (!date) {
+        alert("日付を選んでちょうだい");
+        return;
+      }
+      if (!selectedTime) {
+        alert("時間帯を選んでちょうだい");
+        return;
+      }
+
+      const exists = items.some(item =>
+        item.date === date &&
+        item.start === selectedTime.start &&
+        item.end === selectedTime.end
+      );
+
+      if (exists) {
+        alert("同じ予定はもう入ってるわよ");
+        return;
+      }
+
+      items.push({
+        date,
+        start: selectedTime.start,
+        end: selectedTime.end
+      });
+
+      saveAndRender();
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(outputEl.value);
+        alert("コピーしたわよ");
+      } catch {
+        alert("コピーに失敗したわ");
+      }
+    });
+
+    function saveAndRender() {
+      items.sort((a, b) => {
+        const aKey = `${a.date} ${a.start}`;
+        const bKey = `${b.date} ${b.start}`;
+        return aKey.localeCompare(bKey);
+      });
+
+      localStorage.setItem("shiftItems", JSON.stringify(items));
+      renderList();
+      renderOutput();
+    }
+
+    function renderList() {
+      listEl.innerHTML = "";
+
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span>${formatDisplay(item.date, item.start, item.end)}</span>
+          <button class="delete-btn" data-index="${index}">削除</button>
+        `;
+        listEl.appendChild(li);
+      });
+
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = Number(btn.dataset.index);
+          items.splice(index, 1);
+          saveAndRender();
+        });
+      });
+    }
+
+    function renderOutput() {
+      outputEl.value = items
+        .map(item => formatDisplay(item.date, item.start, item.end))
+        .join("\n");
+    }
+
+    function formatDisplay(dateStr, start, end) {
+      const date = new Date(dateStr);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return `${month}/${day} ${removeLeadingZero(start)}〜${removeLeadingZero(end)}`;
+    }
+
+    function removeLeadingZero(timeStr) {
+      const [h, m] = timeStr.split(":");
+      return `${Number(h)}:${m}`;
+    }
+
+    saveAndRender();
+  </script>
+</body>
+</html>
