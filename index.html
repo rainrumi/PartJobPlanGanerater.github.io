@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex" />
-  <title>バイト出勤可能一覧</title>
+  <title>バイト出勤可能日一覧</title>
   <style>
     * {
       box-sizing: border-box;
@@ -262,7 +262,7 @@
 
       <div class="help-text">
         時間帯タグを選択して、カレンダーの日付を押すと追加/削除するわ。<br />
-        同じ色のタグがその日についていれば削除、別の色なら追加よ。1日最大3件までで、4件目は最初の1件が消えるわ。
+        同じタグがその日についていれば削除、別タグなら追加よ。1日最大3件までで、4件目は最初の1件が消えるわ。
       </div>
 
       <div class="tag-list" id="tagList"></div>
@@ -288,22 +288,9 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "shift_calendar_app_v2";
+    const STORAGE_KEY = "shift_calendar_app_v3";
 
-    const PRESET_COLORS = [
-      "#e74c3c",
-      "#e67e22",
-      "#f1c40f",
-      "#27ae60",
-      "#16a085",
-      "#3498db",
-      "#3f51b5",
-      "#8e44ad",
-      "#e91e63",
-      "#795548",
-      "#607d8b",
-      "#2ecc71"
-    ];
+    const BASE_COLOR = "#e74c3c";
 
     const state = loadState();
 
@@ -365,8 +352,8 @@
         selectedTagId: null,
         nextTagId: 1,
         tags: [
-          { id: 1, start: "08:00", end: "13:00", color: "#e74c3c" },
-          { id: 2, start: "18:00", end: "21:00", color: "#3498db" }
+          { id: 1, start: "08:00", end: "13:00", color: generateRandomHueColor() },
+          { id: 2, start: "18:00", end: "21:00", color: generateRandomHueColor() }
         ],
         shiftsByDate: {}
       };
@@ -421,7 +408,7 @@
         id: state.nextTagId,
         start,
         end,
-        color: pickNextColor()
+        color: generateRandomHueColor()
       };
 
       state.tags.push(newTag);
@@ -430,11 +417,6 @@
 
       saveState();
       renderAll();
-    }
-
-    function pickNextColor() {
-      const usedCount = state.tags.length;
-      return PRESET_COLORS[usedCount % PRESET_COLORS.length];
     }
 
     function removeTag(tagId) {
@@ -610,7 +592,7 @@
       });
 
       dateKeys.forEach(dateKey => {
-        const shifts = state.shiftsByDate[dateKey];
+        const shifts = [...state.shiftsByDate[dateKey]].sort(compareShiftTime);
         const [year, month, day] = dateKey.split("-").map(Number);
 
         shifts.forEach(shift => {
@@ -623,6 +605,14 @@
       outputEl.value = lines.join("\n");
     }
 
+    function compareShiftTime(a, b) {
+      const startCompare = a.start.localeCompare(b.start);
+      if (startCompare !== 0) {
+        return startCompare;
+      }
+      return a.end.localeCompare(b.end);
+    }
+
     function formatDateKey(year, month, day) {
       return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     }
@@ -630,6 +620,104 @@
     function removeLeadingZero(timeStr) {
       const [hour, minute] = timeStr.split(":");
       return `${Number(hour)}:${minute}`;
+    }
+
+    function hexToHsl(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const rn = r / 255;
+      const gn = g / 255;
+      const bn = b / 255;
+
+      const max = Math.max(rn, gn, bn);
+      const min = Math.min(rn, gn, bn);
+      const delta = max - min;
+
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+
+      if (delta !== 0) {
+        s = delta / (1 - Math.abs(2 * l - 1));
+
+        switch (max) {
+          case rn:
+            h = 60 * (((gn - bn) / delta) % 6);
+            break;
+          case gn:
+            h = 60 * (((bn - rn) / delta) + 2);
+            break;
+          case bn:
+            h = 60 * (((rn - gn) / delta) + 4);
+            break;
+        }
+      }
+
+      if (h < 0) {
+        h += 360;
+      }
+
+      return {
+        h,
+        s: s * 100,
+        l: l * 100
+      };
+    }
+
+    function hexToRgb(hex) {
+      const normalized = hex.replace("#", "");
+      const value = normalized.length === 3
+        ? normalized.split("").map(ch => ch + ch).join("")
+        : normalized;
+
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16)
+      };
+    }
+
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c / 2;
+
+      let rPrime = 0;
+      let gPrime = 0;
+      let bPrime = 0;
+
+      if (0 <= h && h < 60) {
+        rPrime = c; gPrime = x; bPrime = 0;
+      } else if (60 <= h && h < 120) {
+        rPrime = x; gPrime = c; bPrime = 0;
+      } else if (120 <= h && h < 180) {
+        rPrime = 0; gPrime = c; bPrime = x;
+      } else if (180 <= h && h < 240) {
+        rPrime = 0; gPrime = x; bPrime = c;
+      } else if (240 <= h && h < 300) {
+        rPrime = x; gPrime = 0; bPrime = c;
+      } else {
+        rPrime = c; gPrime = 0; bPrime = x;
+      }
+
+      const r = Math.round((rPrime + m) * 255);
+      const g = Math.round((gPrime + m) * 255);
+      const b = Math.round((bPrime + m) * 255);
+
+      return (
+        "#" +
+        [r, g, b]
+          .map(value => value.toString(16).padStart(2, "0"))
+          .join("")
+      );
+    }
+
+    function generateRandomHueColor() {
+      const baseHsl = hexToHsl(BASE_COLOR);
+      const randomHue = Math.floor(Math.random() * 360);
+      return hslToHex(randomHue, baseHsl.s, baseHsl.l);
     }
 
     renderAll();
