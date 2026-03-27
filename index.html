@@ -124,157 +124,83 @@
     }
 
     .calendar-header {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 10px;
       margin-bottom: 12px;
     }
 
     .calendar-title-wrap {
-      flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
     }
 
     .calendar-title {
       font-size: 20px;
       font-weight: bold;
       text-align: center;
+      line-height: 1.2;
     }
 
     .jump-controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 6px;
       flex-wrap: wrap;
+      opacity: 0.8;
+    }
+
+    .jump-controls select,
+    .jump-btn {
+      min-height: 28px;
+      height: 28px;
+      padding: 4px 7px;
+      border: 1px solid #d9deea;
+      border-radius: 7px;
+      font-size: 10px;
+      background: #f7f9fc;
+      color: #5f6b7a;
     }
 
     .jump-controls select {
-      min-height: 40px;
-      min-width: 92px;
-      padding: 8px 10px;
-      border: 1px solid #cfd6e4;
-      border-radius: 10px;
-      font-size: 14px;
-      background: #fff;
-      color: #222;
+      min-width: 68px;
     }
 
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
-    }
-
-    .weekday {
-      text-align: center;
-      font-weight: bold;
-      padding: 8px 0;
-      color: #667;
-      font-size: 14px;
-    }
-
-    .day-cell {
-      background: #fff;
-      border: 1px solid #dbe2ef;
-      border-radius: 12px;
-      min-height: 120px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .jump-btn {
       cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.08s ease;
-    }
-
-    .day-cell:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-
-    .day-cell.outside {
-      background: #f0f3f8;
-      color: #9aa3b2;
-      cursor: default;
-    }
-
-    .day-number {
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .shift-badge {
-      border-radius: 999px;
-      color: #fff;
-      padding: 4px 8px;
-      font-size: 12px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-height: 24px;
-      display: flex;
-      align-items: center;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 220px;
-      border: 1px solid #cfd6e4;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 15px;
-      resize: vertical;
-    }
-
-    .output-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .help-text {
-      margin-top: 8px;
-      font-size: 13px;
-      color: #666;
-      line-height: 1.5;
     }
 
     @media (max-width: 720px) {
-      .tag-create-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .calendar-title {
-        font-size: 18px;
-      }
-
-      .day-cell {
-        min-height: 100px;
-      }
-
-      .shift-badge {
-        font-size: 11px;
-      }
-
       .calendar-header {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: 1fr;
+        justify-items: stretch;
       }
-
+    
       .calendar-title-wrap {
-        flex-direction: column;
-        gap: 10px;
+        order: -1;
       }
-
+    
       .jump-controls {
         justify-content: center;
       }
+    
+      .calendar-title {
+        font-size: 18px;
+      }
+    }
+
+    #prevMonthBtn {
+      justify-self: start;
+    }
+    
+    #nextMonthBtn {
+      justify-self: end;
     }
   </style>
 </head>
@@ -313,15 +239,15 @@
         <button class="sub-btn" id="prevMonthBtn">前の月</button>
 
         <div class="calendar-title-wrap">
-          <div class="calendar-title" id="calendarTitle"></div>
-
           <div class="jump-controls">
             <select id="jumpYear"></select>
             <select id="jumpMonth"></select>
-            <button class="sub-btn" id="jumpBtn">移動</button>
+            <button class="jump-btn" id="jumpBtn">移動</button>
           </div>
+        
+          <div class="calendar-title" id="calendarTitle"></div>
         </div>
-
+      
         <button class="sub-btn" id="nextMonthBtn">次の月</button>
       </div>
 
@@ -691,32 +617,40 @@
     }
 
     function refreshJumpControls() {
-      const currentYear = new Date().getFullYear();
-      const minYear = Math.min(currentYear - 5, state.currentYear - 5);
-      const maxYear = Math.max(currentYear + 5, state.currentYear + 5);
-
       jumpYearEl.innerHTML = "";
       jumpMonthEl.innerHTML = "";
-
-      for (let year = minYear; year <= maxYear; year++) {
+        
+      const currentYear = new Date().getFullYear();
+      const startYear = currentYear;
+      const endYear = currentYear + 10;
+        
+      for (let year = startYear; year <= endYear; year++) {
         const option = document.createElement("option");
-        option.value = String(year);
+        option.value = year;
         option.textContent = `${year}年`;
-        if (year === state.currentYear) {
-          option.selected = true;
-        }
         jumpYearEl.appendChild(option);
       }
-
+    
       for (let month = 1; month <= 12; month++) {
         const option = document.createElement("option");
-        option.value = String(month);
+        option.value = month;
         option.textContent = `${month}月`;
-        if (month === state.currentMonth + 1) {
-          option.selected = true;
-        }
         jumpMonthEl.appendChild(option);
       }
+    
+      syncJumpControls();
+    
+      jumpBtn.addEventListener("click", () => {
+        const selectedYear = Number(jumpYearEl.value);
+        const selectedMonth = Number(jumpMonthEl.value);
+      
+        state.currentYear = selectedYear;
+        state.currentMonth = selectedMonth - 1;
+      
+        saveState();
+        renderCalendar();
+        syncJumpControls();
+      });
     }
 
     function hexToRgb(hex) {
