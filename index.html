@@ -370,7 +370,6 @@
     clearSelectionBtn.addEventListener("click", () => {
       state.selectedTagId = null;
       saveState();
-      initializeJumpControls();
       renderAll();
     });
 
@@ -382,6 +381,7 @@
       }
       saveState();
       renderCalendar();
+      syncJumpControls();
     });
 
     nextMonthBtn.addEventListener("click", () => {
@@ -392,6 +392,7 @@
       }
       saveState();
       renderCalendar();
+      syncJumpControls();
     });
 
     copyBtn.addEventListener("click", async () => {
@@ -557,7 +558,7 @@
 
     function renderCalendar() {
       calendarGridEl.innerHTML = "";
-
+        
       const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
       weekdays.forEach(day => {
         const el = document.createElement("div");
@@ -565,33 +566,33 @@
         el.textContent = day;
         calendarGridEl.appendChild(el);
       });
-
+    
       calendarTitleEl.textContent = `${state.currentYear}年 ${state.currentMonth + 1}月`;
-
+    
       const firstDay = new Date(state.currentYear, state.currentMonth, 1);
       const lastDay = new Date(state.currentYear, state.currentMonth + 1, 0);
       const daysInMonth = lastDay.getDate();
       const startWeekday = firstDay.getDay();
-
+    
       for (let i = 0; i < startWeekday; i++) {
         const blank = document.createElement("div");
         blank.className = "day-cell outside";
         calendarGridEl.appendChild(blank);
       }
-
+    
       for (let day = 1; day <= daysInMonth; day++) {
         const dateKey = formatDateKey(state.currentYear, state.currentMonth + 1, day);
         const shifts = state.shiftsByDate[dateKey] || [];
-
+      
         const cell = document.createElement("div");
         cell.className = "day-cell";
         cell.addEventListener("click", () => handleDateClick(dateKey));
-
+      
         const dayNumber = document.createElement("div");
         dayNumber.className = "day-number";
         dayNumber.textContent = day;
         cell.appendChild(dayNumber);
-
+      
         shifts.forEach(shift => {
           const badge = document.createElement("div");
           badge.className = "shift-badge";
@@ -599,9 +600,11 @@
           badge.textContent = `${removeLeadingZero(shift.start)}～${removeLeadingZero(shift.end)}`;
           cell.appendChild(badge);
         });
-
+      
         calendarGridEl.appendChild(cell);
       }
+    
+      syncJumpControls();
     }
 
     function handleDateClick(dateKey) {
@@ -888,7 +891,48 @@ function generateRandomHueColor() {
 
   return hslToHex(randomHue, fixedSaturation, adjustedLightness);
 }
+function initializeJumpControls() {
+  jumpYearEl.innerHTML = "";
+  jumpMonthEl.innerHTML = "";
 
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 5;
+  const endYear = currentYear + 5;
+
+  for (let year = startYear; year <= endYear; year++) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = `${year}年`;
+    jumpYearEl.appendChild(option);
+  }
+
+  for (let month = 1; month <= 12; month++) {
+    const option = document.createElement("option");
+    option.value = month;
+    option.textContent = `${month}月`;
+    jumpMonthEl.appendChild(option);
+  }
+
+  syncJumpControls();
+
+  jumpBtn.addEventListener("click", () => {
+    const selectedYear = Number(jumpYearEl.value);
+    const selectedMonth = Number(jumpMonthEl.value);
+
+    state.currentYear = selectedYear;
+    state.currentMonth = selectedMonth - 1;
+
+    saveState();
+    renderCalendar();
+    syncJumpControls();
+  });
+}
+
+function syncJumpControls() {
+  jumpYearEl.value = String(state.currentYear);
+  jumpMonthEl.value = String(state.currentMonth + 1);
+}
+    initializeJumpControls();
     renderAll();
   </script>
 </body>
