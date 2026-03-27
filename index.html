@@ -3,124 +3,238 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>バイト出勤可能日作成</title>
+  <meta name="robots" content="noindex" />
+  <title>バイト出勤可能日一覧</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
       margin: 0;
-      background: #f5f5f5;
+      font-family: sans-serif;
+      background: #f4f6fb;
       color: #222;
     }
 
     .container {
-      max-width: 480px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 16px;
     }
 
     h1 {
-      font-size: 22px;
-      margin-bottom: 16px;
+      font-size: 24px;
+      margin: 0 0 16px;
     }
 
     .card {
-      background: white;
-      border-radius: 12px;
+      background: #fff;
+      border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 12px;
+    }
+
+    .tag-create-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 10px;
+      align-items: end;
     }
 
     label {
       display: block;
+      font-size: 14px;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
-    input[type="date"] {
+    input[type="time"] {
       width: 100%;
-      padding: 12px;
+      min-height: 44px;
+      padding: 10px;
       font-size: 16px;
-      box-sizing: border-box;
-      margin-bottom: 16px;
-    }
-
-    .time-buttons {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .time-btn {
-      border: 1px solid #ccc;
-      background: #fff;
-      padding: 14px;
+      border: 1px solid #cfd6e4;
       border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
+      background: #fff;
     }
 
-    .time-btn.active {
-      background: #222;
-      color: #fff;
-      border-color: #222;
-    }
-
-    .main-btn, .sub-btn {
-      width: 100%;
+    button {
       border: none;
       border-radius: 10px;
-      padding: 14px;
-      font-size: 16px;
+      min-height: 44px;
+      padding: 10px 14px;
+      font-size: 15px;
       cursor: pointer;
-      margin-top: 8px;
     }
 
-    .main-btn {
+    .primary-btn {
       background: #2d6cdf;
-      color: white;
+      color: #fff;
     }
 
     .sub-btn {
-      background: #444;
-      color: white;
+      background: #e7ecf7;
+      color: #222;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .danger-btn {
+      background: #e74c3c;
+      color: #fff;
     }
 
-    li {
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .tag-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: #fff;
+      font-weight: bold;
+      border: 3px solid transparent;
+      min-height: 44px;
+    }
+
+    .tag-chip.selected {
+      border-color: #111;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+    }
+
+    .tag-chip button {
+      min-height: auto;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      border-radius: 999px;
+    }
+
+    .calendar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #fafafa;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 8px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .calendar-title {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      flex: 1;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
       gap: 8px;
     }
 
-    .delete-btn {
-      border: none;
-      background: #e74c3c;
-      color: white;
-      border-radius: 8px;
-      padding: 8px 12px;
+    .weekday {
+      text-align: center;
+      font-weight: bold;
+      padding: 8px 0;
+      color: #667;
+      font-size: 14px;
+    }
+
+    .day-cell {
+      background: #fff;
+      border: 1px solid #dbe2ef;
+      border-radius: 12px;
+      min-height: 120px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .day-cell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .day-cell.outside {
+      background: #f0f3f8;
+      color: #9aa3b2;
+      cursor: default;
+    }
+
+    .day-number {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .shift-badge {
+      border-radius: 999px;
+      color: #fff;
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 1.2;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
     }
 
     textarea {
       width: 100%;
-      min-height: 180px;
-      box-sizing: border-box;
-      font-size: 15px;
+      min-height: 220px;
+      border: 1px solid #cfd6e4;
+      border-radius: 12px;
       padding: 12px;
+      font-size: 15px;
       resize: vertical;
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .help-text {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      .tag-create-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-title {
+        font-size: 18px;
+      }
+
+      .day-cell {
+        min-height: 100px;
+      }
+
+      .shift-badge {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -129,144 +243,396 @@
     <h1>バイト出勤可能日一覧</h1>
 
     <div class="card">
-      <label for="date">日付</label>
-      <input type="date" id="date" />
+      <div class="section-title">新しいシフト時間帯タグを作成</div>
 
-      <label>時間帯</label>
-      <div class="time-buttons" id="timeButtons">
-        <button class="time-btn" data-start="08:00" data-end="13:00">8:00〜13:00</button>
-        <button class="time-btn" data-start="18:00" data-end="21:00">18:00〜21:00</button>
+      <div class="tag-create-grid">
+        <div>
+          <label for="startTime">開始時間</label>
+          <input type="time" id="startTime" value="08:00" />
+        </div>
+
+        <div>
+          <label for="endTime">終了時間</label>
+          <input type="time" id="endTime" value="13:00" />
+        </div>
+
+        <button class="primary-btn" id="addTagBtn">タグ追加</button>
+        <button class="sub-btn" id="clearSelectionBtn">選択解除</button>
       </div>
 
-      <button class="main-btn" id="addBtn">追加</button>
+      <div class="help-text">
+        時間帯タグを選択して、カレンダーの日付を押すと追加/削除するわ。<br />
+        同じ色のタグがその日についていれば削除、別の色なら追加よ。1日最大3件までで、4件目は最初の1件が消えるわ。
+      </div>
+
+      <div class="tag-list" id="tagList"></div>
     </div>
 
     <div class="card">
-      <label>登録一覧</label>
-      <ul id="list"></ul>
+      <div class="calendar-header">
+        <button class="sub-btn" id="prevMonthBtn">前の月</button>
+        <div class="calendar-title" id="calendarTitle"></div>
+        <button class="sub-btn" id="nextMonthBtn">次の月</button>
+      </div>
+
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
     <div class="card">
-      <label for="output">出力テキスト</label>
+      <div class="section-title">出力テキスト</div>
       <textarea id="output" readonly></textarea>
-      <button class="sub-btn" id="copyBtn">コピー</button>
+      <div class="output-actions">
+        <button class="primary-btn" id="copyBtn">コピー</button>
+      </div>
     </div>
   </div>
 
   <script>
-    const dateInput = document.getElementById("date");
-    const timeButtons = document.querySelectorAll(".time-btn");
-    const addBtn = document.getElementById("addBtn");
-    const listEl = document.getElementById("list");
+    const STORAGE_KEY = "shift_calendar_app_v2";
+
+    const PRESET_COLORS = [
+      "#e74c3c",
+      "#e67e22",
+      "#f1c40f",
+      "#27ae60",
+      "#16a085",
+      "#3498db",
+      "#3f51b5",
+      "#8e44ad",
+      "#e91e63",
+      "#795548",
+      "#607d8b",
+      "#2ecc71"
+    ];
+
+    const state = loadState();
+
+    const startTimeInput = document.getElementById("startTime");
+    const endTimeInput = document.getElementById("endTime");
+    const addTagBtn = document.getElementById("addTagBtn");
+    const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+    const tagListEl = document.getElementById("tagList");
+
+    const prevMonthBtn = document.getElementById("prevMonthBtn");
+    const nextMonthBtn = document.getElementById("nextMonthBtn");
+    const calendarTitleEl = document.getElementById("calendarTitle");
+    const calendarGridEl = document.getElementById("calendarGrid");
+
     const outputEl = document.getElementById("output");
     const copyBtn = document.getElementById("copyBtn");
 
-    let selectedTime = null;
-    let items = JSON.parse(localStorage.getItem("shiftItems") || "[]");
-
-    timeButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        timeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedTime = {
-          start: btn.dataset.start,
-          end: btn.dataset.end
-        };
-      });
+    addTagBtn.addEventListener("click", handleAddTag);
+    clearSelectionBtn.addEventListener("click", () => {
+      state.selectedTagId = null;
+      saveState();
+      renderAll();
     });
 
-    addBtn.addEventListener("click", () => {
-      const date = dateInput.value;
-      if (!date) {
-        alert("日付を選んでちょうだい");
-        return;
+    prevMonthBtn.addEventListener("click", () => {
+      state.currentMonth -= 1;
+      if (state.currentMonth < 0) {
+        state.currentMonth = 11;
+        state.currentYear -= 1;
       }
-      if (!selectedTime) {
-        alert("時間帯を選んでちょうだい");
-        return;
+      saveState();
+      renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+      state.currentMonth += 1;
+      if (state.currentMonth > 11) {
+        state.currentMonth = 0;
+        state.currentYear += 1;
       }
-
-      const exists = items.some(item =>
-        item.date === date &&
-        item.start === selectedTime.start &&
-        item.end === selectedTime.end
-      );
-
-      if (exists) {
-        alert("同じ予定はもう入ってるわよ");
-        return;
-      }
-
-      items.push({
-        date,
-        start: selectedTime.start,
-        end: selectedTime.end
-      });
-
-      saveAndRender();
+      saveState();
+      renderCalendar();
     });
 
     copyBtn.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(outputEl.value);
-        alert("コピーしたわよ");
-      } catch {
-        alert("コピーに失敗したわ");
+        alert("コピーしたわよ！");
+      } catch (error) {
+        alert("コピーに失敗したわ…");
       }
     });
 
-    function saveAndRender() {
-      items.sort((a, b) => {
-        const aKey = `${a.date} ${a.start}`;
-        const bKey = `${b.date} ${b.start}`;
-        return aKey.localeCompare(bKey);
-      });
+    function loadState() {
+      const today = new Date();
+      const defaultState = {
+        currentYear: today.getFullYear(),
+        currentMonth: today.getMonth(),
+        selectedTagId: null,
+        nextTagId: 1,
+        tags: [
+          { id: 1, start: "08:00", end: "13:00", color: "#e74c3c" },
+          { id: 2, start: "18:00", end: "21:00", color: "#3498db" }
+        ],
+        shiftsByDate: {}
+      };
 
-      localStorage.setItem("shiftItems", JSON.stringify(items));
-      renderList();
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        defaultState.nextTagId = 3;
+        return defaultState;
+      }
+
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          currentYear: parsed.currentYear ?? defaultState.currentYear,
+          currentMonth: parsed.currentMonth ?? defaultState.currentMonth,
+          selectedTagId: parsed.selectedTagId ?? null,
+          nextTagId: parsed.nextTagId ?? 1,
+          tags: Array.isArray(parsed.tags) ? parsed.tags : defaultState.tags,
+          shiftsByDate: parsed.shiftsByDate ?? {}
+        };
+      } catch {
+        defaultState.nextTagId = 3;
+        return defaultState;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function handleAddTag() {
+      const start = startTimeInput.value;
+      const end = endTimeInput.value;
+
+      if (!start || !end) {
+        alert("開始時間と終了時間を入れなさいよ！");
+        return;
+      }
+
+      if (start >= end) {
+        alert("終了時間は開始時間より後にしてちょうだい！");
+        return;
+      }
+
+      const exists = state.tags.some(tag => tag.start === start && tag.end === end);
+      if (exists) {
+        alert("その時間帯タグはもうあるわよ！");
+        return;
+      }
+
+      const newTag = {
+        id: state.nextTagId,
+        start,
+        end,
+        color: pickNextColor()
+      };
+
+      state.tags.push(newTag);
+      state.selectedTagId = newTag.id;
+      state.nextTagId += 1;
+
+      saveState();
+      renderAll();
+    }
+
+    function pickNextColor() {
+      const usedCount = state.tags.length;
+      return PRESET_COLORS[usedCount % PRESET_COLORS.length];
+    }
+
+    function removeTag(tagId) {
+      const targetTag = state.tags.find(tag => tag.id === tagId);
+      if (!targetTag) return;
+
+      state.tags = state.tags.filter(tag => tag.id !== tagId);
+
+      for (const dateKey of Object.keys(state.shiftsByDate)) {
+        state.shiftsByDate[dateKey] = state.shiftsByDate[dateKey].filter(
+          shift => shift.tagId !== tagId
+        );
+
+        if (state.shiftsByDate[dateKey].length === 0) {
+          delete state.shiftsByDate[dateKey];
+        }
+      }
+
+      if (state.selectedTagId === tagId) {
+        state.selectedTagId = null;
+      }
+
+      saveState();
+      renderAll();
+    }
+
+    function renderAll() {
+      renderTagList();
+      renderCalendar();
       renderOutput();
     }
 
-    function renderList() {
-      listEl.innerHTML = "";
+    function renderTagList() {
+      tagListEl.innerHTML = "";
 
-      items.forEach((item, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <span>${formatDisplay(item.date, item.start, item.end)}</span>
-          <button class="delete-btn" data-index="${index}">削除</button>
-        `;
-        listEl.appendChild(li);
-      });
+      if (state.tags.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "時間帯タグはまだないわ。先に作りなさいよ。";
+        empty.style.color = "#666";
+        tagListEl.appendChild(empty);
+        return;
+      }
 
-      document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const index = Number(btn.dataset.index);
-          items.splice(index, 1);
-          saveAndRender();
+      state.tags.forEach(tag => {
+        const chip = document.createElement("div");
+        chip.className = "tag-chip";
+        if (tag.id === state.selectedTagId) {
+          chip.classList.add("selected");
+        }
+        chip.style.background = tag.color;
+
+        const text = document.createElement("span");
+        text.textContent = `${removeLeadingZero(tag.start)}～${removeLeadingZero(tag.end)}`;
+        text.style.cursor = "pointer";
+        text.addEventListener("click", () => {
+          state.selectedTagId = tag.id;
+          saveState();
+          renderTagList();
         });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "削除";
+        deleteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          removeTag(tag.id);
+        });
+
+        chip.addEventListener("click", () => {
+          state.selectedTagId = tag.id;
+          saveState();
+          renderTagList();
+        });
+
+        chip.appendChild(text);
+        chip.appendChild(deleteBtn);
+        tagListEl.appendChild(chip);
       });
+    }
+
+    function renderCalendar() {
+      calendarGridEl.innerHTML = "";
+
+      const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+      weekdays.forEach(day => {
+        const el = document.createElement("div");
+        el.className = "weekday";
+        el.textContent = day;
+        calendarGridEl.appendChild(el);
+      });
+
+      calendarTitleEl.textContent = `${state.currentYear}年 ${state.currentMonth + 1}月`;
+
+      const firstDay = new Date(state.currentYear, state.currentMonth, 1);
+      const lastDay = new Date(state.currentYear, state.currentMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startWeekday = firstDay.getDay();
+
+      for (let i = 0; i < startWeekday; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day-cell outside";
+        calendarGridEl.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = formatDateKey(state.currentYear, state.currentMonth + 1, day);
+        const shifts = state.shiftsByDate[dateKey] || [];
+
+        const cell = document.createElement("div");
+        cell.className = "day-cell";
+        cell.addEventListener("click", () => handleDateClick(dateKey));
+
+        const dayNumber = document.createElement("div");
+        dayNumber.className = "day-number";
+        dayNumber.textContent = day;
+        cell.appendChild(dayNumber);
+
+        shifts.forEach(shift => {
+          const badge = document.createElement("div");
+          badge.className = "shift-badge";
+          badge.style.background = shift.color;
+          badge.textContent = `${removeLeadingZero(shift.start)}～${removeLeadingZero(shift.end)}`;
+          cell.appendChild(badge);
+        });
+
+        calendarGridEl.appendChild(cell);
+      }
+    }
+
+    function handleDateClick(dateKey) {
+      const selectedTag = state.tags.find(tag => tag.id === state.selectedTagId);
+      if (!selectedTag) {
+        alert("先に時間帯タグを選びなさいよ！");
+        return;
+      }
+
+      if (!state.shiftsByDate[dateKey]) {
+        state.shiftsByDate[dateKey] = [];
+      }
+
+      const shifts = state.shiftsByDate[dateKey];
+      const existingIndex = shifts.findIndex(shift => shift.tagId === selectedTag.id);
+
+      if (existingIndex >= 0) {
+        shifts.splice(existingIndex, 1);
+      } else {
+        shifts.push({
+          tagId: selectedTag.id,
+          start: selectedTag.start,
+          end: selectedTag.end,
+          color: selectedTag.color,
+          createdAt: Date.now()
+        });
+
+        if (shifts.length > 3) {
+          shifts.shift();
+        }
+      }
+
+      if (shifts.length === 0) {
+        delete state.shiftsByDate[dateKey];
+      }
+
+      saveState();
+      renderCalendar();
+      renderOutput();
     }
 
     function renderOutput() {
-      outputEl.value = items
-        .map(item => formatDisplay(item.date, item.start, item.end))
-        .join("\n");
+      const lines = [];
+
+      const dateKeys = Object.keys(state.shiftsByDate).sort((a, b) => {
+        return a.localeCompare(b);
+      });
+
+      dateKeys.forEach(dateKey => {
+        const shifts = state.shiftsByDate[dateKey];
+        const [year, month, day] = dateKey.split("-").map(Number);
+
+        shifts.forEach(shift => {
+          lines.push(
+            `${month}/${day} ${removeLeadingZero(shift.start)}～${removeLeadingZero(shift.end)}`
+          );
+        });
+      });
+
+      outputEl.value = lines.join("\n");
     }
 
-    function formatDisplay(dateStr, start, end) {
-      const date = new Date(dateStr);
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      return `${month}/${day} ${removeLeadingZero(start)}〜${removeLeadingZero(end)}`;
+    function formatDateKey(year, month, day) {
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     }
 
     function removeLeadingZero(timeStr) {
-      const [h, m] = timeStr.split(":");
-      return `${Number(h)}:${m}`;
+      const [hour, minute] = timeStr.split(":");
+      return `${Number(hour)}:${minute}`;
     }
 
-    saveAndRender();
+    renderAll();
   </script>
 </body>
 </html>
